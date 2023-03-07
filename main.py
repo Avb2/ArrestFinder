@@ -1,36 +1,61 @@
+import webbrowser
 from bs4 import BeautifulSoup
 import requests
 
+# Information input
+fname = input('First Name')
+lname = input('Last Name ')
 
-l = []
+city = input('City')
 
-for x in range(10):
-    url = 'https://thegeorgiagazette.com/fayette/page/'+f'{x}/'
-
-    # Initiate bs4
+# Checks the first page for the inmate
+try:
+    url = f'https://thegeorgiagazette.com/{city}/{fname}-{lname}/'
     response = requests.get(url)
     result = BeautifulSoup(response.text, 'html.parser')
 
-    inmates = (result.findAll('a'))
+    # Checks if the page exists
+    try:
+        response.raise_for_status()
 
-    for i in inmates:
-        l += [i['href']]
+    # If the page doesn't exist, it prints an error
+    except requests.exceptions.HTTPError as error:
+        print(error)
 
-l = [x.strip('https://thegeorgiagazette.com/fayette/') for x in l]
+    # If the page exists, the url/urls are opened
+    else:
+        webbrowser.open(url)
+        reasonForArrest = result.findAll('p')
+        for reasons in reasonForArrest:
+            for x in reasons:
+                print(x.text)
 
-search = input()
 
+except:
+    pass
 
+# Checks pages 2-10 for the inmate
+for x in range(2, 10):
+    url = f'https://thegeorgiagazette.com/{city}/{fname}-{lname}-{x}/'
+    response = requests.get(url)
+    result = BeautifulSoup(response.text, 'html.parser')
 
-for index , x in enumerate(l):
-    if x == search:
-        print(index, 'found', x)
+    try:
+        response.raise_for_status()
 
-print(l)
+    except requests.exceptions.HTTPError as error:
+        print(x, error)
+        if x == 10:
+            try:
+                webbrowser.open(f'https://thegeorgiagazette.com/{fname}-{lname}/')
+            except requests.exceptions.HTTPError:
+                print(error)
 
-try:
-    response.raise_for_status()
-except requests.exceptions.HTTPError as error:
-    print(error)
-else:
-    print(response.content)
+    else:
+        webbrowser.open(url)
+        reasonForArrest = result.findAll('p')
+
+        print(x)
+        for reasons in reasonForArrest:
+            for x in reasons:
+                print(x.text)
